@@ -1,12 +1,15 @@
 # Trading-bot
-Trading bot try, just for personal use and also lucrative of course.
+Trading bot, just for personal use and also lucrative of course.
 
-Implemented using LLM and LangChain library.
+Implemented using Alpaca API broker and LLM LangChain library.
 
 **LIBRARIES:**
 
-    ·Python 3.10
-    ·alpaca-py
-    ·langchain
-    ·pymongo
+    - Python 3.10
+    - alpaca-py
+    - langchain
+    - pymongo
+    - environ
+
+
     
