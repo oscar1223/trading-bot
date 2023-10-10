@@ -2,42 +2,25 @@
 
 import os
 from dotenv import load_dotenv, find_dotenv
-from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce
+import alpaca_trade_api as tradeapi
+import matplotlib.pyplot as plt
 
 _ = load_dotenv(find_dotenv())
+paper_alpaca_endpoint = os.environ['PAPER_ALPACA_ENDPOINT']
 paper_alpaca_key = os.environ['PAPER_ALPACA_KEY']
 paper_alpaca_secret_key = os.environ['PAPER_ALPACA_SECRET_KEY']
 
+api = tradeapi.REST(key_id=paper_alpaca_key, secret_key=paper_alpaca_secret_key, base_url=paper_alpaca_endpoint)
 
-trading_client = TradingClient(paper_alpaca_key, paper_alpaca_secret_key, paper=True)
+# Define los parametros para la consulta de cotizaciones del stock
+symbol = 'AAPL'
+timeframe = '1Day'
+start = '2022-01-01'
+end = '2023-01-01'
 
-# preparing market order
-market_order_data = MarketOrderRequest(
-                    symbol="SPY",
-                    qty=0.023,
-                    side=OrderSide.BUY,
-                    time_in_force=TimeInForce.DAY
-                    )
+# Realiza la consulta de cotización
+bars = api.get_bars(symbol, timeframe, start=start, end=end)
 
-# Market order
-market_order = trading_client.submit_order(
-                order_data=market_order_data
-               )
-
-# preparing limit order
-limit_order_data = LimitOrderRequest(
-                    symbol="BTC/USD",
-                    limit_price=17000,
-                    notional=4000,
-                    side=OrderSide.SELL,
-                    time_in_force=TimeInForce.FOK
-                   )
-
-# Limit order
-'''
-limit_order = trading_client.submit_order(
-                order_data=limit_order_data
-              )
-'''
+# Imprime la cotizacion en consola
+for bar in bars:
+    print(f"{bar.t} - Open: {bar.o}, High: {bar.h}, Low: {bar.l}, Close: {bar.c}", flush=True)
