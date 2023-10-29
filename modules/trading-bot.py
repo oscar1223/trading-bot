@@ -342,7 +342,8 @@ class LongShort:
         self.allStock.sort(key=lambda x: x[1])
 
 # Run the LongShort class
-
+ls = LongShort()
+ls.run()
 
 
 
