@@ -251,8 +251,97 @@ class LongShort:
 
     def rerank(self):
         # Rerank all stocks to adjust long and shorts.
-        pass
+        tRank = threading.Thread(target=self.rank)
+        tRank.start()
+        tRank.join()
 
+        # Grabs the top and botton quarter of the sorted stock list to
+        # get the long and short lists.
+        longShortAmount = len(self.allStock) // 4
+        self.long = []
+        self.short = []
+        for i, stockField in enumerate(self.allStock):
+            if(i < longShortAmount):
+                self.short.append(stockField[0])
+            elif(i > (len(self.allStock) - 1 - longShortAmount)):
+                self.long.append(stockField[0])
+            else:
+                continue
+
+        # Determine amount to long/short based on total stock price of each bucket.
+        equity = int(float(self.alpaca.get_account().equity))
+
+        self.shortAmount = equity * 0.30
+        self.longAmount = equity + self.shortAmount
+
+        respGetTPLong = []
+        tGetTPLong = threading.Thread(target=self.getTotalPrice, args=[self.long, respGetTPLong])
+        tGetTPLong.start()
+        tGetTPLong.join()
+
+        respGetTPShort = []
+        tGetTPShort = threading.Thread(target=self.getTotalPrice, args=[self.short, respGetTPShort])
+        tGetTPShort.start()
+        tGetTPShort.join()
+
+        self.qLong = int(self.longAmount // respGetTPLong[0])
+        self.qShort = int(self.shortAmount // respGetTPShort[0])
+
+    # Get the total price of the array of the input stocks.
+    def getTotalPrice(self, stocks, resp):
+        totalPrice = 0
+        for stock in stocks:
+            bars = self.alpaca.get_bars(stock, 'minute', 1)
+            totalPrice += bars[stock][0].c
+        resp.append(totalPrice)
+
+    # Submit a batch order that returns completed and uncompleted orders.
+    def sendBatchOrder(self, qty, stocks, side, resp):
+        executed = []
+        incomplete = []
+        for stock in stocks:
+            if(self.blacklist.isdisjoint({stock})):
+                respSO = []
+                tSubmitOrder = threading.Thread(target=self.submitOrder, args=[qty, stock, side, respSO])
+                tSubmitOrder.start()
+                tSubmitOrder.join()
+                if(not respSO[0]):
+                    incomplete.append(stock)
+                else:
+                    executed.append(stock)
+                respSO.clear()
+        resp.append([executed, incomplete])
+
+    # Submit an order if quantity is above 0.
+    def submitOrder(self, qty, stock, side, resp):
+        if(qty > 0):
+            try:
+                self.alpaca.submit_order(stock, qty, side, 'market', 'day')
+                print('Market order of | '+str(qty)+' '+side+' | completed.')
+                resp.append(True)
+            except:
+                print('Order of | '+str(qty)+' '+stock+' '+side+' | did not go through.')
+                resp.append(False)
+        else:
+            print('Quantity is 0, order of | '+str(qty)+' '+stock+' '+side+' | not completed.')
+            resp.append(True)
+
+    # Get percent changes of the stock prices over the past 10 minutes.
+    def getPercentChanges(self):
+        lenght = 10
+        for i, stock in enumerate(self.allStock):
+            bars = self.alpaca.get_bars(stock[0], 'minute', lenght)
+            self.allStock[i][1] = (bars[stock[0]][len(bars[stock[0]]) - 1].c - bars[stock[0]][0].o) / bars[stock[0]][0].o
+
+    # Mechanism used to rank the stocks, the basis of the Long-Short Equity Strategy
+    def rank(self):
+        tGetPC = threading.Thread(target=self.getPercentChanges)
+        tGetPC.start()
+        tGetPC.join()
+
+        self.allStock.sort(key=lambda x: x[1])
+
+# Run the LongShort class
 
 
 
