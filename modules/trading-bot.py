@@ -291,7 +291,7 @@ class LongShort:
     def getTotalPrice(self, stocks, resp):
         totalPrice = 0
         for stock in stocks:
-            bars = self.alpaca.get_bars(stock, 'minute', 1)
+            bars = self.alpaca.get_bars_iter(stock, 'minute', 1)
             totalPrice += bars[stock][0].c
         resp.append(totalPrice)
 
@@ -330,7 +330,7 @@ class LongShort:
     def getPercentChanges(self):
         lenght = 10
         for i, stock in enumerate(self.allStock):
-            bars = self.alpaca.get_bars(stock[0], 'minute', lenght)
+            bars = self.alpaca.get_barset(stock[0], 'minute', lenght)
             self.allStock[i][1] = (bars[stock[0]][len(bars[stock[0]]) - 1].c - bars[stock[0]][0].o) / bars[stock[0]][0].o
 
     # Mechanism used to rank the stocks, the basis of the Long-Short Equity Strategy
