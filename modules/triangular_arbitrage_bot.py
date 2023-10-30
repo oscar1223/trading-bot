@@ -37,6 +37,12 @@ rest_api = alpaca.REST(paper_alpaca_key, paper_alpaca_secret_key, paper_alpaca_e
 waitTime = 3
 min_arb_percent = 0.3
 
+client = TradingClient(paper_alpaca_key, paper_alpaca_secret_key, paper=True)
+account = dict(client.get_account())
+for k,v in account.items():
+    print(f"{k:30}{v}")
+
+
 HEADERS = {'APCA-API-KEY-ID': paper_alpaca_key,
            'APCA-API-SECRET-KEY': paper_alpaca_secret_key}
 
@@ -57,8 +63,6 @@ async def get_quote(symbol: str):
         if quote.status_code != 200:
             print("Undesirable response from Alpaca! {}".format(quote.json()))
             return False
-        elif quote.status_code == 200:
-            print('Suscessful {}'.format(quote.json()))
 
     except Exception as e:
         print("There was an issue getting trade quote from Alpaca: {0}".format(e))
@@ -80,7 +84,7 @@ def post_alpaca_order(symbol, qty, side):
         print("There was an issue posting order to Alpaca: {0}".format(e))
         return False
 
-async def check_arb():
+async def check_arb(spreads=None):
     '''
     Check to see if an arbitrage condition exists
     '''
@@ -115,7 +119,7 @@ async def check_arb():
             print("Bad Order 1")
             exit()
 
-        # when ETH/USD is cheaper
+    # when ETH/USD is cheaper
     elif DIV < ETHBTC * (1 - min_arb_percent / 100):
         order1 = post_alpaca_order("ETHUSD", BUY_ETH, "buy")
         if order1.status_code == 200:
@@ -138,7 +142,7 @@ async def check_arb():
             exit()
     else:
         print("No arb opportunity, spread: {}".format(spread * 100))
-        #spreads.append(spread)
+        spreads.append(spread)
 
 
 async def main():
