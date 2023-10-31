@@ -29,6 +29,8 @@ print('${} is available as buying power.'.format(account.buying_power))
 balance_change = float(account.equity) - float(account.last_equity)
 print(f'Today\'s portfolio balance change: ${balance_change}')
 
+
+
 '''Triangular Arbitrage trading bot'''
 
 rest_api = alpaca.REST(paper_alpaca_key, paper_alpaca_secret_key, paper_alpaca_endpoint)
